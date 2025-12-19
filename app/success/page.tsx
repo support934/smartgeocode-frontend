@@ -56,7 +56,7 @@ function SuccessContent() {
             <i className="fas fa-crown text-yellow-500 mr-2"></i>
             <span className="font-semibold text-red-800">Premium Unlocked</span>
           </div>
-          <p className="text-gray-600">Log in to access batch dashboard.</p>
+          <p className="text-gray-600">Log in to access your dashboard.</p>
         </div>
         {error && <p className="text-red-600 text-center mb-4 font-semibold">{error}</p>}
         <form onSubmit={handleLogin} className="space-y-4">
