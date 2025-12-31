@@ -8,6 +8,8 @@ import { Elements } from '@stripe/react-stripe-js';
 // Load Stripe promise (only once, outside component)
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
+// Dummy change to force Vercel rebuild - v3 2025-12-30
+
 export default function Dashboard() {
   const [subscription, setSubscription] = useState<'free' | 'premium' | 'loading'>('loading');
   const [email, setEmail] = useState<string>('');
