@@ -177,19 +177,17 @@ export default function Dashboard() {
   };
 
  const handleUpsell = async () => {
-  
   try {
-    console.log('Sending to checkout:', {
-    email,
-    address: lastAddress || 'Premium Batch Upgrade from dashboard'
-    });
+    const payload = {
+      email,
+      address: 'Hardcoded Test Address - Chennai India' // TEMP TEST
+    };
+    console.log('Sending payload:', payload); // This will show in browser console
+
     const res = await fetch('/api/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email,
-        address: lastAddress || 'Premium Batch Upgrade from dashboard',
-      }),
+      body: JSON.stringify(payload),
     });
 
     if (!res.ok) {
