@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
   const backendUrl = process.env.BACKEND_URL || 'https://smartgeocode.io';
 
   try {
-    const res = await fetch(`${backendUrl}/api/set-premium`, {
+    const res = await fetch(`${backendUrl}/api/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -13,6 +13,6 @@ export async function POST(request: NextRequest) {
     const data = await res.json();
     return NextResponse.json(data, { status: res.status });
   } catch (err) {
-    return NextResponse.json({ status: 'error', message: 'Activation failed' }, { status: 500 });
+    return NextResponse.json({ status: 'error', message: 'Network error' }, { status: 500 });
   }
 }

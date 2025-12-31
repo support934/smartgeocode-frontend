@@ -8,17 +8,21 @@ function SuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const sessionId = searchParams.get('session_id');
+  const [mode, setMode] = useState<'signup' | 'login'>('signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [premiumMessage, setPremiumMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setPremiumMessage('');
     setLoading(true);
+    const endpoint = mode === 'signup' ? '/api/signup' : '/api/login';
     try {
-      const res = await fetch('/api/login', {
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -27,17 +31,29 @@ function SuccessContent() {
       if (res.ok) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('userId', data.userId);
+        localStorage.setItem('email', email);
         // Activate premium if Stripe success
         if (sessionId) {
-          await fetch('/api/set-premium', {
+          const premiumRes = await fetch('/api/set-premium', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email }),
           });
+          const premiumData = await premiumRes.json();
+          if (premiumRes.ok) {
+            setPremiumMessage('Premium activated successfully!');
+          } else {
+            setError(premiumData.message || 'Premium activation failed—try manual or contact support');
+          }
         }
         router.push('/dashboard');
       } else {
-        setError(data.message || 'Invalid email or password');
+        if (data.message && data.message.includes('already exists')) {
+          setMode('login');
+          setError('Account exists—log in below');
+        } else {
+          setError(data.message || 'Invalid email or password');
+        }
       }
     } catch (err) {
       setError('Network error—try again');
@@ -56,17 +72,24 @@ function SuccessContent() {
             <i className="fas fa-crown text-yellow-500 mr-2"></i>
             <span className="font-semibold text-red-800">Premium Unlocked</span>
           </div>
-          <p className="text-gray-600">Log in to access your dashboard.</p>
+          <p className="text-gray-600">
+            {mode === 'signup' ? 'Create your account to start batch geocoding' : 'Welcome back! Log in to your dashboard'}
+          </p>
+          {premiumMessage && <p className="text-green-600 mt-4 font-semibold">{premiumMessage}</p>}
         </div>
-        {error && <p className="text-red-600 text-center mb-4 font-semibold">{error}</p>}
-        <form onSubmit={handleLogin} className="space-y-4">
+        {error && (
+          <div className="text-red-600 text-center mb-6 p-4 bg-red-50 rounded-lg font-semibold">
+            {error}
+          </div>
+        )}
+        <form onSubmit={handleAuth} className="space-y-4">
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full p-3 border rounded"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
           <input
             type="password"
@@ -74,15 +97,21 @@ function SuccessContent() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full p-3 border rounded"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
-          <button type="submit" disabled={loading} className="w-full bg-red-600 text-white py-3 rounded font-bold hover:bg-red-700 disabled:opacity-50">
-            {loading ? 'Logging in...' : 'Log In to Dashboard'}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-red-600 text-white p-3 rounded-lg hover:bg-red-700 font-semibold disabled:opacity-50"
+          >
+            {loading ? 'Processing...' : mode === 'signup' ? 'Create Account & Access Dashboard' : 'Log In to Dashboard'}
           </button>
         </form>
-        <p className="text-center mt-6">
-          Forgot password? <a href="/forgot-password" className="text-red-600 underline">Reset here</a>
-        </p>
+        {mode === 'login' && (
+          <p className="text-center mt-6 text-sm text-gray-500">
+            Forgot password? <a href="/forgot-password" className="text-red-600 hover:underline font-semibold">Reset here</a>
+          </p>
+        )}
       </div>
     </div>
   );
@@ -90,7 +119,7 @@ function SuccessContent() {
 
 export default function Success() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
       <SuccessContent />
     </Suspense>
   );
