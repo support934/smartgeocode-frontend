@@ -1,9 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
+// Handle OPTIONS pre-flight (CORS) requests
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',  // Or your frontend domain
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const rawBody = await request.text(); // Read raw first
+    const rawBody = await request.text();
     console.log('Raw request body:', rawBody);
 
     const payload = JSON.parse(rawBody);
@@ -41,18 +53,18 @@ export async function POST(request: NextRequest) {
     console.log('Creating Stripe session for:', { email, address });
 
     const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',  // Changed back to recurring for $29/mo
+      mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [
         {
-          price: 'price_1Sd8JxA5JR9NQZvD0GCmjm6R',  // ← YOUR LIVE $29/mo RECURRING PRICE ID
+          price: 'price_1Sd8JxA5JR9NQZvD0GCmjm6R',  // Your live $29/mo recurring Price ID
           quantity: 1,
         },
       ],
       customer_email: email,
       success_url: 'https://geocode-frontend.smartgeocode.io/success?session_id={CHECKOUT_SESSION_ID}',
       cancel_url: 'https://geocode-frontend.smartgeocode.io?cancelled=true',
-      metadata: { email, address },  // For webhook
+      metadata: { email, address },
     });
 
     console.log('Session created:', session.id);
