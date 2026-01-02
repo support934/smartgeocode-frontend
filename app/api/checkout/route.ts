@@ -69,6 +69,16 @@ export async function POST(request: NextRequest) {
 
     console.log('Session created:', session.id);
 
+    // Call backend to store customer ID (adjust URL to your Railway backend)
+    await fetch('https://smartgeocode-backend.up.railway.app/api/set-customer-id', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        customerId: session.customer, // from session
+      }),
+    });
+
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
     console.error('Checkout error:', error.message, error.stack);
