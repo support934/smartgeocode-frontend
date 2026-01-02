@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
+import Script from 'next/script'; // ← ADD THIS LINE
 
 // Load Stripe promise (only once, outside component)
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
@@ -342,8 +343,17 @@ export default function Dashboard() {
 
   // Premium batch UI (red/white theme)
   return (
+    // FORCE DEPLOY V4 - 2025-12-31 - ADDRESS FIX FINAL
     <>
       <Toaster position="top-right" />
+
+      {/* Force reload JS bundle with cache busting */}
+    <Script
+     src={`/_next/static/chunks/pages/dashboard.js?v=${Date.now()}`}
+     strategy="beforeInteractive"
+    />
+      
+
       <Elements stripe={stripePromise} options={{ locale: 'en' }}>
         <div className="min-h-screen bg-white">
           <main className="max-w-7xl mx-auto p-10">
