@@ -38,14 +38,14 @@ export default function RootLayout({
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Image
-                src="/android-chrome-512x512.png" // Use your high-res PNG as logo
+                src="/images/logo.png" // Use your high-res PNG as logo
                 alt="Smartgeocode Logo"
                 width={60}
                 height={60}
                 priority
                 className="rounded-full"
               />
-              <h1 className="text-3xl font-bold">smartgeocode</h1>
+              <h1 className="text-3xl font-bold">Smartgeocode</h1>
             </div>
 
             {/* Global Client Header (your existing component for login/logout/etc.) */}
