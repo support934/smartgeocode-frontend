@@ -11,6 +11,7 @@ import Script from 'next/script'; // ← ADD THIS LINE
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 // Final deploy force - address fix - 2025-12-31
+console.log('FORCE NEW CHUNK V7 - 2026-01-02 - ADDRESS MUST BE SENT');
 
 export default function Dashboard() {
   const [subscription, setSubscription] = useState<'free' | 'premium' | 'loading'>('loading');
