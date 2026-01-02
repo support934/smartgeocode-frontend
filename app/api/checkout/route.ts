@@ -6,7 +6,7 @@ export async function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': '*',  // Or your frontend domain
+      'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     },
@@ -15,25 +15,41 @@ export async function OPTIONS() {
 
 export async function POST(request: NextRequest) {
   try {
+    // Read raw body for logging (safe, doesn't consume the stream)
     const rawBody = await request.text();
     console.log('Raw request body:', rawBody);
 
-    const payload = JSON.parse(rawBody);
+    // Parse as JSON once
+    let payload;
+    try {
+      payload = JSON.parse(rawBody);
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      return NextResponse.json({ error: 'Invalid JSON payload' }, { status: 400 });
+    }
+
     console.log('Parsed payload:', payload);
 
-    const { email, address } = payload;
+    // Type the payload
+    const typedPayload = payload as {
+      email?: string;
+      address?: string;
+    };
+
+    const email = typedPayload.email;
+    const address = typedPayload.address;
 
     if (!email) {
       console.error('Missing email in request');
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    if (!address) {
-      console.error('Missing address in request');
-      return NextResponse.json({ error: 'Address is required' }, { status: 400 });
+    if (!address || address.trim().length < 3) {
+      console.error('Invalid or missing address');
+      return NextResponse.json({ error: 'Valid address is required' }, { status: 400 });
     }
 
-    // Validate email format (basic)
+    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       console.error('Invalid email format:', email);
@@ -57,7 +73,7 @@ export async function POST(request: NextRequest) {
       payment_method_types: ['card'],
       line_items: [
         {
-          price: 'price_1Sd8JxA5JR9NQZvD0GCmjm6R',  // Your live $29/mo recurring Price ID
+          price: 'price_1Sd8JxA5JR9NQZvD0GCmjm6R', // Your live $29/mo recurring Price ID
           quantity: 1,
         },
       ],
@@ -75,7 +91,7 @@ export async function POST(request: NextRequest) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email,
-        customerId: session.customer, // from session
+        customerId: session.customer,
       }),
     });
 
