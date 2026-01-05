@@ -4,9 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev-clean": "rm -rf .next && next dev", 
     "build": "next build",
+    "build-clean": "rm -rf .next && next build", 
     "start": "next start",
-    "lint": "next lint"
+    "start-clean": "rm -rf .next && next build && next start",
+    "lint": "next lint",
+    "test-clean": "rm -rf .next node_modules && npm install && npm run build && npm run start"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^5.4.1",
