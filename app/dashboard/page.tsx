@@ -1,17 +1,19 @@
 'use client';
 // CACHE BUSTER V6 - 2026-01-02 - FORCE NEW CHUNK HASH
 
-import { useState, useEffect, useRef } from 'react'; // ← Add useRef here
-// ... rest unchanged ...
+import { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
+import Script from 'next/script'; // ← ADD THIS LINE
 
 // Load Stripe promise (only once, outside component)
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
-// CACHE BUSTER V9 - 2026-01-04 - FORCE ADDRESS IN PAYLOAD
-console.log('DASHBOARD PAGE LOADED - V9 - 2026-01-04 - ADDRESS TRACE');
 
+// Final deploy force - address fix - 2025-12-31
+console.log('FORCE NEW CHUNK V7 - 2026-01-02 - ADDRESS MUST BE SENT');
+
+console.log('DASHBOARD PAGE LOADED - V8 - 2026-01-02 - ADDRESS FIX');
 
 export default function Dashboard() {
   const [subscription, setSubscription] = useState<'free' | 'premium' | 'loading'>('loading');
@@ -24,14 +26,11 @@ export default function Dashboard() {
   const [showHelp, setShowHelp] = useState(false);
    const [lastAddress, setLastAddress] = useState<string>('');
 
-   const lastAddressRef = useRef<string>(''); // Sync ref for immediate access
-
   // Single lookup for free UI
   const [address, setAddress] = useState('');
   const [singleResults, setSingleResults] = useState<any>(null);
   const [singleLoading, setSingleLoading] = useState(false);
 
-  console.log('DASHBOARD LOADED - TEST LOG VISIBLE IN BROWSER CONSOLE - 2026-01-05');
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedEmail = localStorage.getItem('email') || '';
@@ -162,14 +161,9 @@ export default function Dashboard() {
     try {
       const res = await fetch(`/api/geocode?address=${encodeURIComponent(address)}`);
       const data = await res.json();
-      console.log('TRACE: After geocode fetch - address value:', address); // Should be 'chennai, india'
       setSingleResults(data);
       if (data.status === 'success') {
-      console.log('TRACE: After geocode fetch - address value:', address); // Should be 'chennai, india'
-      setLastAddress(address); // Save the address used
-      lastAddressRef.current = address; // Immediate sync for handleUpsell
-        
-        console.log('TRACE: Email payload before send:', { email, address, result: data });
+        setLastAddress(address); // Save the address used
         await fetch('/api/email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -186,15 +180,12 @@ export default function Dashboard() {
       setSingleLoading(false);
     }
   };
- 
 
  const handleUpsell = async () => {
-  console.log('BEFORE SEND: lastAddress state is:', lastAddress);
-  console.log('BEFORE SEND: lastAddressRef.current is:', lastAddressRef.current);
   try {
     const payload = {
       email,
-      address: lastAddressRef.current || 'Premium Batch Upgrade from Single Lookup', // Latest value
+      address: 'Hardcoded Test Address - Chennai India' // TEMP TEST
     };
     console.log('Sending payload:', payload); // This will show in browser console
 
@@ -238,6 +229,15 @@ export default function Dashboard() {
             <h1 className="text-3xl font-bold">smartgeocode</h1>
             <div className="space-x-4">
               <button
+  onClick={handleUpsell}
+  disabled={!singleResults || singleResults.status !== 'success'}
+  className={`mt-4 bg-green-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-green-700 transition ${
+    !singleResults || singleResults.status !== 'success' ? 'opacity-50 cursor-not-allowed' : ''
+  }`}
+              >
+                Upgrade to Premium ($29/mo)
+              </button>
+              <button
                 onClick={logout}
                 className="bg-white text-red-600 px-6 py-2 rounded-lg font-semibold hover:bg-gray-100 transition"
               >
@@ -262,7 +262,7 @@ export default function Dashboard() {
             <form onSubmit={handleSingleSubmit} className="space-y-6 max-w-lg mx-auto">
               <input
                 type="text"
-                placeholder="Enter full address (e.g., New York, USA)"
+                placeholder="Enter full address (e.g., Chennai, India)"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent text-lg"
@@ -351,6 +351,11 @@ export default function Dashboard() {
     <>
       <Toaster position="top-right" />
 
+      {/* Force reload JS bundle with cache busting */}
+    <Script
+     src={`/_next/static/chunks/pages/dashboard.js?v=${Date.now()}`}
+     strategy="beforeInteractive"
+    />
       
 
       <Elements stripe={stripePromise} options={{ locale: 'en' }}>
