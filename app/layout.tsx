@@ -26,7 +26,7 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <Script src="https://js.stripe.com/v3/" strategy="beforeInteractive" />
       </head>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning={true}> {/* Suppress hydration warning */}
         <header className="bg-red-600 text-white p-5 shadow-lg">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
             <div className="flex items-center space-x-4">

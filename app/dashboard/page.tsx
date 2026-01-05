@@ -1,7 +1,7 @@
 'use client';
 // CACHE BUSTER V6 - 2026-01-02 - FORCE NEW CHUNK HASH
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react'; // ← Add useRef here
 import toast, { Toaster } from 'react-hot-toast';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
@@ -24,13 +24,16 @@ export default function Dashboard() {
   const [currentBatch, setCurrentBatch] = useState<any>(null);
   const [error, setError] = useState('');
   const [showHelp, setShowHelp] = useState(false);
-   const [lastAddress, setLastAddress] = useState<string>('');
+  const [lastAddress, setLastAddress] = useState<string>('');
+
+  const lastAddressRef = useRef<string>(''); // Sync ref for immediate access
 
   // Single lookup for free UI
   const [address, setAddress] = useState('');
   const [singleResults, setSingleResults] = useState<any>(null);
   const [singleLoading, setSingleLoading] = useState(false);
 
+  console.log('DASHBOARD LOADED - TEST LOG VISIBLE IN BROWSER CONSOLE - 2026-01-05');
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedEmail = localStorage.getItem('email') || '';
@@ -164,6 +167,7 @@ export default function Dashboard() {
       setSingleResults(data);
       if (data.status === 'success') {
         setLastAddress(address); // Save the address used
+        lastAddressRef.current = address; // Immediate sync for handleUpsell
         await fetch('/api/email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -180,14 +184,15 @@ export default function Dashboard() {
       setSingleLoading(false);
     }
   };
+ 
 
  const handleUpsell = async () => {
   try {
     const payload = {
       email,
-      address: 'Hardcoded Test Address - Chennai India' // TEMP TEST
+      address: lastAddressRef.current || 'Premium Batch Upgrade from Single Lookup',
     };
-    console.log('Sending payload:', payload); // This will show in browser console
+    console.log('Sending payload:', payload);
 
     const res = await fetch('/api/checkout', {
       method: 'POST',
@@ -195,15 +200,18 @@ export default function Dashboard() {
       body: JSON.stringify(payload),
     });
 
+    const data = await res.json(); // This is always an object (or throws if not JSON)
+
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(`Checkout failed: ${res.status} - ${text}`);
+      throw new Error(`Checkout failed: ${res.status} - ${data.error || 'Unknown error'}`);
     }
-
-    const data = await res.json();
-    if (data.url) {
+   
+    if (typeof data === 'object' && data !== null && 'url' in data && typeof data.url === 'string') {
       window.location.href = data.url;
       toast.success('Redirecting to Stripe Checkout...');
+    } else {
+      throw new Error('Invalid response from checkout');
     }
   } catch (error) {
     console.error('Upsell error:', error);
@@ -229,15 +237,6 @@ export default function Dashboard() {
             <h1 className="text-3xl font-bold">smartgeocode</h1>
             <div className="space-x-4">
               <button
-  onClick={handleUpsell}
-  disabled={!singleResults || singleResults.status !== 'success'}
-  className={`mt-4 bg-green-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-green-700 transition ${
-    !singleResults || singleResults.status !== 'success' ? 'opacity-50 cursor-not-allowed' : ''
-  }`}
-              >
-                Upgrade to Premium ($29/mo)
-              </button>
-              <button
                 onClick={logout}
                 className="bg-white text-red-600 px-6 py-2 rounded-lg font-semibold hover:bg-gray-100 transition"
               >
@@ -262,7 +261,7 @@ export default function Dashboard() {
             <form onSubmit={handleSingleSubmit} className="space-y-6 max-w-lg mx-auto">
               <input
                 type="text"
-                placeholder="Enter full address (e.g., Chennai, India)"
+                placeholder="Enter full address (e.g., New York, USA)"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 className="w-full p-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent text-lg"
