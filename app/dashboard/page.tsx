@@ -72,6 +72,15 @@ export default function Dashboard() {
     setError('');
     setCurrentBatch(null);
 
+    const reader = new FileReader();
+    reader.onload = (e) => {
+    const text = e.target?.result as string;
+    const lines = text.split('\n');
+    const filteredLines = lines.filter(line => line.trim() !== '' && !line.trim().startsWith('#'));
+    console.log('Preview filtered lines (skip #/blank):', filteredLines.length);
+    };
+  reader.readAsText(file);
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('email', email);
