@@ -1,12 +1,12 @@
 'use client';
 // CACHE BUSTER V6 - 2026-01-02 - FORCE NEW CHUNK HASH
 
-import { useState, useEffect, useRef } from 'react'; // ← Add useRef here
+import { useState, useEffect, useRef } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import Script from 'next/script'; // ← ADD THIS LINE
-
+import type { StripeElementsOptions } from '@stripe/stripe-js';
 // Load Stripe promise (only once, outside component)
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -33,7 +33,6 @@ export default function Dashboard() {
   const [singleResults, setSingleResults] = useState<any>(null);
   const [singleLoading, setSingleLoading] = useState(false);
 
-  console.log('DASHBOARD LOADED - TEST LOG VISIBLE IN BROWSER CONSOLE - 2026-01-05');
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedEmail = localStorage.getItem('email') || '';
@@ -146,9 +145,9 @@ export default function Dashboard() {
                 `address,landmark,city,state,zip,country\n` +
                 `1600 Pennsylvania Ave NW,White House,Washington DC,,20500,USA\n` +
                 `Chennai,,Tamil Nadu,,,India\n` +
-                `1251 Avenue of the Americas,,New York,NY,10020,USA\n` +
+                `1251 Avenue of the Americas,,smartgeocode,NY,10020,USA\n` +
                 `Ahmedabad,,Gujarat,,,India\n` +
-                `350 Fifth Avenue,Empire State Building,New York,NY,10118,USA\n` +
+                `350 Fifth Avenue,Empire State Building,smartgeocode,NY,10118,USA\n` +
                 `Tokyo Tower,,Minato City,Tokyo,,Japan\n`;
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -184,40 +183,36 @@ export default function Dashboard() {
       setSingleLoading(false);
     }
   };
- 
 
- const handleUpsell = async () => {
-  try {
-    const payload = {
-      email,
-      address: lastAddressRef.current || 'Premium Batch Upgrade from Single Lookup',
-    };
-    console.log('Sending payload:', payload);
+  const handleUpsell = async () => {
+    try {
+      const payload = {
+        email,
+        address: lastAddressRef.current || 'Premium Batch Upgrade from Single Lookup', // Latest value
+      };
+      console.log('Sending payload:', payload); // This will show in browser console
 
-    const res = await fetch('/api/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-    const data = await res.json(); // This is always an object (or throws if not JSON)
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Checkout failed: ${res.status} - ${text}`);
+      }
 
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Checkout failed: ${res.status} - ${data.error || 'Unknown error'}`);
-    }
-   
-    if (typeof data === 'object' && data !== null && 'url' in data && typeof data.url === 'string') {
-      window.location.href = data.url;
-      toast.success('Redirecting to Stripe Checkout...');
-    } else {
-      throw new Error('Invalid response from checkout');
-    }
-  } catch (error) {
-    console.error('Upsell error:', error);
-    toast.error('Upgrade failed: ' + (error instanceof Error ? error.message : 'Unknown'));
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+        toast.success('Redirecting to Stripe Checkout...');
+      }
+    } catch (error) {
+      console.error('Upsell error:', error);
+      toast.error('Upgrade failed: ' + (error instanceof Error ? error.message : 'Unknown'));
   }
-};
+  };
 
   const logout = () => {
     localStorage.clear();
@@ -232,20 +227,7 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
         <Toaster position="top-right" />
-        <header className="bg-red-600 text-white p-5 shadow-lg">
-          <div className="max-w-6xl mx-auto flex justify-between items-center">
-            <h1 className="text-3xl font-bold">smartgeocode</h1>
-            <div className="space-x-4">
-              <button
-                onClick={logout}
-                className="bg-white text-red-600 px-6 py-2 rounded-lg font-semibold hover:bg-gray-100 transition"
-              >
-                Log Out
-              </button>
-            </div>
-          </div>
-        </header>
-
+        
         <main className="max-w-5xl mx-auto p-8">
           <section className="text-center mb-12">
             <h2 className="text-5xl font-extrabold text-gray-900 mb-6 leading-tight">
@@ -313,14 +295,6 @@ export default function Dashboard() {
             )}
           </div>
 
-          <div className="text-center mb-12">
-            <a
-              href="/success"
-              className="bg-red-600 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-red-700 transition shadow-lg"
-            >
-              Log In (Premium Dashboard)
-            </a>
-          </div>
 
           <section className="grid md:grid-cols-3 gap-8">
             <div className="bg-white p-8 rounded-2xl shadow-lg text-center border border-gray-100 hover:shadow-xl transition">
@@ -330,8 +304,8 @@ export default function Dashboard() {
             </div>
             <div className="bg-white p-8 rounded-2xl shadow-lg text-center border border-gray-100 hover:shadow-xl transition">
               <i className="fas fa-envelope-open text-5xl text-red-500 mb-6"></i>
-              <h3 className="text-xl font-bold mb-3">Lead Generation Built-In</h3>
-              <p className="text-gray-600">Capture emails with every lookup—grow your list effortlessly and convert visitors to customers.</p>
+              <h3 className="text-xl font-bold mb-3">Email Results Instantly</h3>
+              <p className="text-gray-600">Results sent straight to your inbox—no more copying/pasting<br />Every lookup is emailed automatically so you can reference it anytime.</p>
             </div>
             <div className="bg-white p-8 rounded-2xl shadow-lg text-center border border-gray-100 hover:shadow-xl transition">
               <i className="fas fa-rocket text-5xl text-red-500 mb-6"></i>
@@ -518,7 +492,7 @@ export default function Dashboard() {
 {`address,landmark,city,state,zip,country
 1600 Pennsylvania Ave NW,White House,Washington DC,,20500,USA
 Chennai,,Tamil Nadu,,,India
-1251 Avenue of the Americas,,New York,NY,10020,USA`}
+1251 Avenue of the Americas,,smartgeocode,NY,10020,USA`}
                   </pre>
                 </div>
               </div>

@@ -6,19 +6,25 @@ export default function ClientHeader() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [email, setEmail] = useState('');
 
-  const checkAuth = () => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      const storedEmail = localStorage.getItem('email');
-      setIsLoggedIn(!!token);
-      setEmail(storedEmail || '');
-    }
-  };
-
   useEffect(() => {
-    checkAuth();
+    const checkAuth = () => {
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('token');
+        const storedEmail = localStorage.getItem('email');
+        const loggedIn = !!token;
+        setIsLoggedIn(loggedIn);
+        setEmail(storedEmail || '');
+      }
+    };
+
+    checkAuth(); // Initial check
+
+    // Listen for cross-tab changes
     window.addEventListener('storage', checkAuth);
+
+    // Short poll for immediate redirect (from /success)
     const interval = setInterval(checkAuth, 500);
+
     return () => {
       window.removeEventListener('storage', checkAuth);
       clearInterval(interval);

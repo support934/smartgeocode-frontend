@@ -111,12 +111,7 @@ export default function Home() {
           )}
         </div>
 
-        <div className="text-center mb-8">
-          <a href="/success" className="bg-white text-red-600 px-6 py-3 rounded-lg font-bold hover:bg-gray-100">
-            Log In (Premium Dashboard)
-          </a>
-        </div>
-
+      
         <section className="grid md:grid-cols-3 gap-6">
           <div className="bg-white p-6 rounded-xl shadow-md text-center">
             <i className="fas fa-bolt text-3xl text-red-500 mb-4"></i>

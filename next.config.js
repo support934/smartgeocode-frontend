@@ -5,13 +5,15 @@ const nextConfig = {
   devIndicators: {
     buildActivity: true,
   },
-   async rewrites() {
-    return [];  // Disable all rewrites/proxies (no local reroute)
-  },
   async redirects() {
-    return [];  // Disable redirects
-  },
-  // Add headers to disable caching for all pages in dev
+  return [
+    {
+      source: '/',
+      destination: '/dashboard',
+      permanent: true,
+    },
+  ];
+},
   async headers() {
     return [
       {
@@ -33,10 +35,6 @@ const nextConfig = {
       },
     ];
   },
-  experimental: {
-  optimizePackageImports: true,
-  forceSwcTransforms: true, // Faster, more reliable cache busting
-},
 };
 
 export default nextConfig;
