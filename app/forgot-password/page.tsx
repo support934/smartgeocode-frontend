@@ -13,11 +13,15 @@ export default function ForgotPassword() {
     setLoading(true);
     setError('');
     setMessage('');
+
+    // Normalize email to lowercase and trim whitespace
+    const normalizedEmail = email.toLowerCase().trim();
+
     try {
       const res = await fetch('/api/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: normalizedEmail }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -47,7 +51,11 @@ export default function ForgotPassword() {
             required
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
           />
-          <button type="submit" disabled={loading} className="w-full bg-red-600 text-white p-3 rounded-lg hover:bg-red-700 font-semibold disabled:opacity-50">
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-red-600 text-white p-3 rounded-lg hover:bg-red-700 font-semibold disabled:opacity-50"
+          >
             {loading ? 'Sending...' : 'Send Reset Link'}
           </button>
         </form>

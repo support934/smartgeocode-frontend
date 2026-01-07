@@ -14,14 +14,20 @@ export default function Signup() {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // Normalize email to lowercase and trim
+    const normalizedEmail = email.toLowerCase().trim();
+
     try {
       const res = await fetch('/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: normalizedEmail, password }),
       });
       const data = await res.json();
       if (res.ok) {
+        // Store normalized email in localStorage
+        localStorage.setItem('email', normalizedEmail);
         router.push('/success');
       } else {
         setError(data.message || 'Signup failed—try again');
