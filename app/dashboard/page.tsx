@@ -42,12 +42,17 @@ export default function Dashboard() {
           .then(res => res.json())
           .then(data => {
             const status = data.subscription_status || 'free';
+            console.log('Subscription status from backend: ' + status); // Debug log
             setSubscription(status);
             if (status === 'premium') {
               loadBatches(storedEmail);              
             }
           })
-          .catch(() => setSubscription('free'));
+          .catch((err) => {
+            console.error('Subscription fetch error:', err); // Debug error
+            toast.error('Failed to load subscription status');
+            setSubscription('free');
+          });
       } else {
         setSubscription('free');
       }
@@ -154,9 +159,9 @@ export default function Dashboard() {
                 `address,landmark,city,state,zip,country\n` +
                 `1600 Pennsylvania Ave NW,White House,Washington DC,,20500,USA\n` +
                 `Chennai,,Tamil Nadu,,,India\n` +
-                `1251 Avenue of the Americas,,smartgeocode,NY,10020,USA\n` +
+                `1251 Avenue of the Americas,,New York,NY,10020,USA\n` +
                 `Ahmedabad,,Gujarat,,,India\n` +
-                `350 Fifth Avenue,Empire State Building,smartgeocode,NY,10118,USA\n` +
+                `350 Fifth Avenue,Empire State Building,New York,NY,10118,USA\n` +
                 `Tokyo Tower,,Minato City,Tokyo,,Japan\n`;
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -501,7 +506,7 @@ export default function Dashboard() {
 {`address,landmark,city,state,zip,country
 1600 Pennsylvania Ave NW,White House,Washington DC,,20500,USA
 Chennai,,Tamil Nadu,,,India
-1251 Avenue of the Americas,,smartgeocode,NY,10020,USA`}
+1251 Avenue of the Americas,,New York,NY,10020,USA`}
                   </pre>
                 </div>
               </div>
