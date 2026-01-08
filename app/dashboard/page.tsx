@@ -33,37 +33,37 @@ export default function Dashboard() {
   const [singleResults, setSingleResults] = useState<any>(null);
   const [singleLoading, setSingleLoading] = useState(false);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedEmail = localStorage.getItem('email') || '';
-      console.log('DEBUG: Stored email from localStorage: ', storedEmail); // Step 1: Log stored email
+ useEffect(() => {
+  if (typeof window !== 'undefined') {
+    const storedEmail = localStorage.getItem('email') || '';
+    console.log('DEBUG: Stored email from localStorage: ', storedEmail);
 
-      setEmail(storedEmail);
-      if (storedEmail) {
-        fetch(`/api/me?email=${encodeURIComponent(storedEmail)}`)
-          .then(res => {
-            console.log('DEBUG: /api/me fetch status: ', res.status); // Step 2: Log status code
-            return res.json();
-          })
-          .then(data => {
-            console.log('DEBUG: /api/me full data: ', data); // Step 3: Log response data
-            const status = data.subscription_status || 'free';
-            setSubscription(status);
-            console.log('DEBUG: Set subscription to: ', status); // Step 4: Log final set value
-            if (status === 'premium') {
-              loadBatches(storedEmail);              
-            }
-          })
-          .catch((err) => {
-            console.error('DEBUG: Subscription fetch error: ', err); // Step 5: Log error
-            setSubscription('free');
-          });
-      } else {
-        console.log('DEBUG: No stored email - set to free'); // Step 6: Log no email case
-        setSubscription('free');
-      }
+    setEmail(storedEmail);
+    if (storedEmail) {
+      fetch(`/api/me?email=${encodeURIComponent(storedEmail)}`)
+        .then(res => {
+          console.log('DEBUG: /api/me fetch status: ', res.status);
+          return res.json();
+        })
+        .then(data => {
+          console.log('DEBUG: /api/me full data: ', data);
+          const status = data.subscription_status || 'free';
+          setSubscription(status);
+          console.log('DEBUG: Set subscription to: ', status);
+          if (status === 'premium') {
+            loadBatches(storedEmail);
+          }
+        })
+        .catch(err => {
+          console.error('DEBUG: Subscription fetch error: ', err);
+          setSubscription('free');
+        });
+    } else {
+      console.log('DEBUG: No stored email - set to free');
+      setSubscription('free');
     }
-  }, []);
+  }
+}, []);
 
   const loadBatches = async (userEmail: string) => {
     try {
@@ -471,36 +471,42 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
-            {/* DEBUG LINE - ADD THIS */}
-            <div className="text-center text-red-600 font-bold text-xl mt-4">
-              DEBUG: Current subscription state = {subscription}
-            </div>
-            {subscription === 'premium' && (
-                <div className="mt-8 text-center">
-                  <button
-                    onClick={async () => {
-                      try {
-                        const res = await fetch('/api/create-portal-session', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ email }),
-                        });
-                        const data = await res.json();
-                        if (data.url) {
-                          window.location.href = data.url;
-                        } else {
-                          toast.error('Failed to open portal');
-                        }
-                      } catch (err) {
-                        toast.error('Error opening billing portal');
-                      }
-                    }}
-                    className="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700 transition"
-                  >
-                    Manage Subscription / Cancel
-                  </button>
+           {/* Debug visibility - should show if premium block renders */}
+<div className="text-center text-purple-600 font-bold text-2xl mt-8 mb-4">
+  DEBUG: Premium UI Rendered! Subscription = {subscription}
+</div>
+
+{{subscription === 'premium' && (
+              <div className="mt-8 text-center border-4 border-green-500 p-4 bg-yellow-100">
+                <div className="text-red-600 font-bold text-2xl mb-4">
+                  DEBUG: Inside Premium Conditional - Button Should Be Below
                 </div>
-              )}  
+                <button
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/create-portal-session', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email }),
+                      });
+                      const data = await res.json();
+                      if (data.url) {
+                        window.location.href = data.url;
+                      } else {
+                        toast.error('Failed to open portal');
+                      }
+                    } catch (err) {
+                      toast.error('Error opening billing portal');
+                    }
+                  }}
+                  className="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700 transition"
+                  style={{ fontSize: '1.5rem', padding: '20px 40px' }} // Force larger, visible
+                >
+                  Manage Subscription / Cancel (DEBUG VISIBLE)
+                </button>
+              </div>
+            )}
+            
             {/* Help Modal */}
             {showHelp && (
               <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-6">
