@@ -32,30 +32,20 @@ export default function Dashboard() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedEmail = (localStorage.getItem('email') || '').toLowerCase().trim();
-      console.log('DEBUG: Stored email from localStorage:', storedEmail);
       setEmail(storedEmail);
 
       if (storedEmail) {
         fetch(`/api/me?email=${encodeURIComponent(storedEmail)}`)
-          .then(res => {
-            console.log('DEBUG: /api/me fetch status:', res.status);
-            return res.json();
-          })
+          .then(res => res.json())
           .then(data => {
-            console.log('DEBUG: /api/me full data:', data);
             const status = data.subscription_status || 'free';
             setSubscription(status);
-            console.log('DEBUG: Set subscription to:', status);
             if (status === 'premium') {
               loadBatches(storedEmail);
             }
           })
-          .catch(err => {
-            console.error('DEBUG: Subscription fetch error:', err);
-            setSubscription('free');
-          });
+          .catch(() => setSubscription('free'));
       } else {
-        console.log('DEBUG: No stored email - set to free');
         setSubscription('free');
       }
     }
@@ -79,15 +69,6 @@ export default function Dashboard() {
     setError('');
     setCurrentBatch(null);
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      const lines = text.split('\n');
-      const filteredLines = lines.filter(line => line.trim() !== '' && !line.trim().startsWith('#'));
-      console.log('Preview filtered lines (skip #/blank):', filteredLines.length);
-    };
-    reader.readAsText(file);
-
     const formData = new FormData();
     formData.append('file', file);
     formData.append('email', email);
@@ -108,8 +89,6 @@ export default function Dashboard() {
       }
 
       const data = await res.json();
-      console.log('FULL RAW BATCH RESPONSE:', JSON.stringify(data, null, 2));
-
       if (data.status === 'success' && Array.isArray(data.preview)) {
         setCurrentBatch(data);
         loadBatches(email);
@@ -246,12 +225,13 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gray-50">
       <Toaster position="top-right" />
 
+      {/* Global Header (only one) */}
       <header className="bg-red-600 text-white p-5 shadow-lg">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <span className="text-3xl font-bold">Smartgeocode</span>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-6">
             <span className="font-medium">Welcome, {email}!</span>
             <button
               onClick={logout}
@@ -259,12 +239,38 @@ export default function Dashboard() {
             >
               Log Out
             </button>
+            {/* Manage Subscription Button - Blended in header */}
+            {subscription === 'premium' && (
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch('/api/create-portal-session', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ email }),
+                    });
+                    const data = await res.json();
+                    if (data.url) {
+                      window.location.href = data.url;
+                    } else {
+                      toast.error('Failed to open portal');
+                    }
+                  } catch (err) {
+                    toast.error('Error opening billing portal');
+                  }
+                }}
+                className="bg-white text-red-600 px-6 py-2 rounded-lg font-semibold hover:bg-gray-100 transition border border-red-300"
+              >
+                Manage Subscription
+              </button>
+            )}
           </div>
         </div>
       </header>
 
       {subscription === 'free' ? (
         <main className="max-w-5xl mx-auto p-8">
+          {/* Free UI - single lookup */}
           <section className="text-center mb-12">
             <h2 className="text-5xl font-extrabold text-gray-900 mb-6 leading-tight">
               Stop Wasting Time on Address Validation
@@ -332,54 +338,26 @@ export default function Dashboard() {
           </div>
 
           <section className="grid md:grid-cols-3 gap-8">
+            {/* Features cards */}
             <div className="bg-white p-8 rounded-2xl shadow-lg text-center border border-gray-100 hover:shadow-xl transition">
               <i className="fas fa-bolt text-5xl text-red-500 mb-6"></i>
               <h3 className="text-xl font-bold mb-3">Lightning-Fast Results</h3>
-              <p className="text-gray-600">Accurate lat/lng in seconds—no API limits for free trials. Save your team hours on manual work.</p>
+              <p className="text-gray-600">Accurate lat/lng in seconds—no API limits for free trials.</p>
             </div>
             <div className="bg-white p-8 rounded-2xl shadow-lg text-center border border-gray-100 hover:shadow-xl transition">
               <i className="fas fa-envelope-open text-5xl text-red-500 mb-6"></i>
               <h3 className="text-xl font-bold mb-3">Email Results Instantly</h3>
-              <p className="text-gray-600">Results sent straight to your inbox—no more copying/pasting<br />Every lookup is emailed automatically so you can reference it anytime.</p>
+              <p className="text-gray-600">Results sent straight to your inbox—no more copying/pasting.</p>
             </div>
             <div className="bg-white p-8 rounded-2xl shadow-lg text-center border border-gray-100 hover:shadow-xl transition">
               <i className="fas fa-rocket text-5xl text-red-500 mb-6"></i>
               <h3 className="text-xl font-bold mb-3">Scale with Premium</h3>
-              <p className="text-gray-600">Unlimited CSV batch processing for $29/mo—power your business with fast, reliable geocoding.</p>
+              <p className="text-gray-600">Unlimited CSV batch processing for $29/mo.</p>
             </div>
           </section>
         </main>
       ) : (
         <main className="max-w-7xl mx-auto p-10">
-          {/* Debug + Manage Button - Moved to top for visibility */}
-          <div className="mb-12 text-center border-4 border-green-500 p-6 bg-yellow-100 rounded-xl shadow-lg">
-            <div className="text-red-600 font-bold text-3xl mb-4">
-              DEBUG: Premium Block Active - Subscription = {subscription}
-            </div>
-            <button
-              onClick={async () => {
-                try {
-                  const res = await fetch('/api/create-portal-session', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email }),
-                  });
-                  const data = await res.json();
-                  if (data.url) {
-                    window.location.href = data.url;
-                  } else {
-                    toast.error('Failed to open portal');
-                  }
-                } catch (err) {
-                  toast.error('Error opening billing portal');
-                }
-              }}
-              className="bg-blue-600 text-white px-10 py-5 rounded-xl font-bold text-2xl hover:bg-blue-700 transition shadow-2xl"
-            >
-              Manage Subscription / Cancel (Visible!)
-            </button>
-          </div>
-
           {/* Batch Upload */}
           <div className="bg-gray-50 rounded-3xl shadow-2xl p-10 mb-12 border border-gray-100">
             <h2 className="text-3xl font-bold text-red-700 mb-8 text-center">Upload CSV for Batch Geocoding</h2>
