@@ -1,5 +1,4 @@
 'use client';
-// CACHE BUSTER V6 - 2026-01-02 - FORCE NEW CHUNK HASH (removed manual Script)
 
 import { useState, useEffect, useRef } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
@@ -7,10 +6,9 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import type { StripeElementsOptions } from '@stripe/stripe-js';
 
-// Load Stripe promise (only once, outside component)
+// Load Stripe promise
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
-// Final deploy force - address fix - 2025-12-31
 console.log('FORCE NEW CHUNK V7 - 2026-01-02 - ADDRESS MUST BE SENT');
 console.log('DASHBOARD PAGE LOADED - V8 - 2026-01-02 - ADDRESS FIX');
 
@@ -25,9 +23,8 @@ export default function Dashboard() {
   const [showHelp, setShowHelp] = useState(false);
   const [lastAddress, setLastAddress] = useState<string>('');
 
-  const lastAddressRef = useRef<string>(''); // Sync ref for immediate access
+  const lastAddressRef = useRef<string>('');
 
-  // Single lookup for free UI
   const [address, setAddress] = useState('');
   const [singleResults, setSingleResults] = useState<any>(null);
   const [singleLoading, setSingleLoading] = useState(false);
@@ -246,7 +243,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gray-50">
       <Toaster position="top-right" />
 
       <header className="bg-red-600 text-white p-5 shadow-lg">
@@ -354,6 +351,35 @@ export default function Dashboard() {
         </main>
       ) : (
         <main className="max-w-7xl mx-auto p-10">
+          {/* Debug + Manage Button - Moved to top for visibility */}
+          <div className="mb-12 text-center border-4 border-green-500 p-6 bg-yellow-100 rounded-xl shadow-lg">
+            <div className="text-red-600 font-bold text-3xl mb-4">
+              DEBUG: Premium Block Active - Subscription = {subscription}
+            </div>
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch('/api/create-portal-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email }),
+                  });
+                  const data = await res.json();
+                  if (data.url) {
+                    window.location.href = data.url;
+                  } else {
+                    toast.error('Failed to open portal');
+                  }
+                } catch (err) {
+                  toast.error('Error opening billing portal');
+                }
+              }}
+              className="bg-blue-600 text-white px-10 py-5 rounded-xl font-bold text-2xl hover:bg-blue-700 transition shadow-2xl"
+            >
+              Manage Subscription / Cancel (Visible!)
+            </button>
+          </div>
+
           {/* Batch Upload */}
           <div className="bg-gray-50 rounded-3xl shadow-2xl p-10 mb-12 border border-gray-100">
             <h2 className="text-3xl font-bold text-red-700 mb-8 text-center">Upload CSV for Batch Geocoding</h2>
@@ -396,7 +422,7 @@ export default function Dashboard() {
             {currentBatch && currentBatch.status === 'success' && currentBatch.preview && (
               <div className="mt-12">
                 <h3 className="text-2xl font-bold mb-6 text-red-700 text-center">Preview (first 50 rows)</h3>
-                <div className="overflow-x-auto rounded-2xl border border-gray-200 shadow-inner">
+                <div className="overflow-x-auto rounded-2xl border border-gray-200 shadow-inner max-h-96">
                   <table className="w-full border-collapse">
                     <thead className="bg-red-50">
                       <tr>
@@ -430,8 +456,8 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Past Batches */}
-          <div className="bg-gray-50 rounded-3xl shadow-2xl p-10 border border-gray-100">
+          {/* Past Batches - Scrollable */}
+          <div className="bg-gray-50 rounded-3xl shadow-2xl p-10 border border-gray-100 max-h-96 overflow-y-auto">
             <h2 className="text-3xl font-bold text-red-700 mb-8 text-center">Past Batches</h2>
             {batches.length === 0 ? (
               <p className="text-gray-700 text-center text-lg">No batches yet — upload your first CSV!</p>
@@ -466,36 +492,6 @@ export default function Dashboard() {
                 </table>
               </div>
             )}
-          </div>
-
-          {/* Debug + Manage Button */}
-          <div className="mt-8 text-center border-4 border-green-500 p-4 bg-yellow-100">
-            <div className="text-red-600 font-bold text-2xl mb-4">
-              DEBUG: Inside Premium Block - Subscription = {subscription}
-            </div>
-            <button
-              onClick={async () => {
-                try {
-                  const res = await fetch('/api/create-portal-session', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email }),
-                  });
-                  const data = await res.json();
-                  if (data.url) {
-                    window.location.href = data.url;
-                  } else {
-                    toast.error('Failed to open portal');
-                  }
-                } catch (err) {
-                  toast.error('Error opening billing portal');
-                }
-              }}
-              className="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700 transition"
-              style={{ fontSize: '1.5rem', padding: '20px 40px' }}
-            >
-              Manage Subscription / Cancel (DEBUG VISIBLE)
-            </button>
           </div>
 
           {/* Help Modal */}
