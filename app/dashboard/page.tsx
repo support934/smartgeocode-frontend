@@ -476,7 +476,7 @@ export default function Dashboard() {
   DEBUG: Premium UI Rendered! Subscription = {subscription}
 </div>
 
-{{subscription === 'premium' && (
+{subscription === 'premium' && (
               <div className="mt-8 text-center border-4 border-green-500 p-4 bg-yellow-100">
                 <div className="text-red-600 font-bold text-2xl mb-4">
                   DEBUG: Inside Premium Conditional - Button Should Be Below
@@ -506,7 +506,7 @@ export default function Dashboard() {
                 </button>
               </div>
             )}
-            
+
             {/* Help Modal */}
             {showHelp && (
               <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-6">
