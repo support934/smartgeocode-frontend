@@ -353,11 +353,7 @@ export default function Dashboard() {
       <Toaster position="top-right" />
 
       {/* Force reload JS bundle with cache busting */}
-    <Script
-     src={`/_next/static/chunks/pages/dashboard.js?v=${Date.now()}`}
-     strategy="beforeInteractive"
-    />
-      
+    
 
       <Elements stripe={stripePromise} options={{ locale: 'en' } as const}>
         <div className="min-h-screen bg-white">
@@ -474,6 +470,10 @@ export default function Dashboard() {
                   </table>
                 </div>
               )}
+            </div>
+            {/* DEBUG LINE - ADD THIS */}
+            <div className="text-center text-red-600 font-bold text-xl mt-4">
+              DEBUG: Current subscription state = {subscription}
             </div>
             {subscription === 'premium' && (
                 <div className="mt-8 text-center">
