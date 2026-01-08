@@ -15,37 +15,61 @@ function SuccessContent() {
   const [premiumMessage, setPremiumMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Auto-activate premium on Stripe success (if session_id present)
+  useEffect(() => {
+    if (sessionId) {
+      activatePremium();
+    }
+  }, [sessionId]);
+
+  const activatePremium = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      // Get email from session (or prompt user if not available)
+      const emailFromLocal = localStorage.getItem('email') || '';
+      if (!emailFromLocal) {
+        setError('Please log in to activate premium');
+        return;
+      }
+
+      const res = await fetch('/api/set-premium', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailFromLocal }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setPremiumMessage('Premium activated successfully!');
+        router.push('/dashboard'); // Redirect to dashboard
+      } else {
+        setError(data.message || 'Premium activation failed—contact support');
+      }
+    } catch (err) {
+      setError('Network error—try again');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     setError('');
     setPremiumMessage('');
-    setLoading(true);
     const endpoint = mode === 'signup' ? '/api/signup' : '/api/login';
+    const normalizedEmail = email.toLowerCase().trim();
     try {
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: normalizedEmail, password }),
       });
       const data = await res.json();
       if (res.ok) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('userId', data.userId);
-        localStorage.setItem('email', email);
-        // Activate premium if Stripe success
-        if (sessionId) {
-          const premiumRes = await fetch('/api/set-premium', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email }),
-          });
-          const premiumData = await premiumRes.json();
-          if (premiumRes.ok) {
-            setPremiumMessage('Premium activated successfully!');
-          } else {
-            setError(premiumData.message || 'Premium activation failed—try manual or contact support');
-          }
-        }
+        localStorage.setItem('email', normalizedEmail);
         router.push('/dashboard');
       } else {
         if (data.message && data.message.includes('already exists')) {

@@ -36,24 +36,30 @@ export default function Dashboard() {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedEmail = localStorage.getItem('email') || '';
+      console.log('DEBUG: Stored email from localStorage: ', storedEmail); // Step 1: Log stored email
+
       setEmail(storedEmail);
       if (storedEmail) {
         fetch(`/api/me?email=${encodeURIComponent(storedEmail)}`)
-          .then(res => res.json())
+          .then(res => {
+            console.log('DEBUG: /api/me fetch status: ', res.status); // Step 2: Log status code
+            return res.json();
+          })
           .then(data => {
+            console.log('DEBUG: /api/me full data: ', data); // Step 3: Log response data
             const status = data.subscription_status || 'free';
-            console.log('Subscription status from backend: ' + status); // Debug log
             setSubscription(status);
+            console.log('DEBUG: Set subscription to: ', status); // Step 4: Log final set value
             if (status === 'premium') {
               loadBatches(storedEmail);              
             }
           })
           .catch((err) => {
-            console.error('Subscription fetch error:', err); // Debug error
-            toast.error('Failed to load subscription status');
+            console.error('DEBUG: Subscription fetch error: ', err); // Step 5: Log error
             setSubscription('free');
           });
       } else {
+        console.log('DEBUG: No stored email - set to free'); // Step 6: Log no email case
         setSubscription('free');
       }
     }
@@ -309,6 +315,14 @@ export default function Dashboard() {
             )}
           </div>
 
+          <div className="text-center mb-12">
+            <a
+              href="/success"
+              className="bg-red-600 text-white px-10 py-4 rounded-xl font-bold text-lg hover:bg-red-700 transition shadow-lg"
+            >
+              Log In (Premium Dashboard)
+            </a>
+          </div>
 
           <section className="grid md:grid-cols-3 gap-8">
             <div className="bg-white p-8 rounded-2xl shadow-lg text-center border border-gray-100 hover:shadow-xl transition">
@@ -345,7 +359,7 @@ export default function Dashboard() {
     />
       
 
-      <Elements stripe={stripePromise} options={{ locale: 'en' }}>
+      <Elements stripe={stripePromise} options={{ locale: 'en' } as const}>
         <div className="min-h-screen bg-white">
           <main className="max-w-7xl mx-auto p-10">
             {/* Batch Upload */}
