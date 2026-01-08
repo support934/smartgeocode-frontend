@@ -228,17 +228,8 @@ export default function Dashboard() {
       {/* Global Header (only one) */}
       <header className="bg-red-600 text-white p-5 shadow-lg">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <span className="text-3xl font-bold">Smartgeocode</span>
-          </div>
           <div className="flex items-center space-x-6">
-            <span className="font-medium">Welcome, {email}!</span>
-            <button
-              onClick={logout}
-              className="bg-white text-red-600 px-6 py-2 rounded-lg font-semibold hover:bg-gray-100 transition"
-            >
-              Log Out
-            </button>
+      
             {/* Manage Subscription Button - Blended in header */}
             {subscription === 'premium' && (
               <button
